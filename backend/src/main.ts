@@ -14,11 +14,20 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 4000);
   const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+  const frontendUrl = configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
+  const loopbackFrontendUrl = frontendUrl.includes('localhost')
+    ? frontendUrl.replace('localhost', '127.0.0.1')
+    : frontendUrl.includes('127.0.0.1')
+      ? frontendUrl.replace('127.0.0.1', 'localhost')
+      : null;
+  const allowedOrigins = loopbackFrontendUrl && loopbackFrontendUrl !== frontendUrl
+    ? [frontendUrl, loopbackFrontendUrl]
+    : [frontendUrl];
 
   // ── Security ──────────────────────────────────────────────────────────────
   app.use(helmet());
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL', 'http://localhost:3000'),
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   });

@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthProvider";
 
 const navItems = [
   { label: "Find Jobs", href: "/jobs" },
@@ -9,6 +13,14 @@ const navItems = [
 ];
 
 export default function Header() {
+  const router = useRouter();
+  const { status, user, signOut } = useAuth();
+
+  async function handleLogout() {
+    await signOut();
+    router.push("/login");
+  }
+
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-border">
       <div className="container-page flex items-center justify-between h-16">
@@ -30,12 +42,27 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/login"
-            className="hidden sm:inline-block text-sm font-medium text-ink hover:text-brandGreen transition-colors"
-          >
-            Login / Sign Up
-          </Link>
+          {status === "authenticated" && user ? (
+            <>
+              <div className="hidden sm:flex flex-col items-end leading-tight">
+                <span className="text-sm font-semibold text-ink">{user.firstName}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center rounded-full border border-border px-4 py-2 text-sm font-semibold text-ink hover:border-brandGreen hover:text-brandGreen transition-colors"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="inline-block text-sm font-medium text-ink hover:text-brandGreen transition-colors"
+            >
+              Login / Sign Up
+            </Link>
+          )}
+
           <Link
             href="/post-job"
             className="inline-flex items-center rounded-full bg-brandGreen px-4 py-2 text-sm font-semibold text-white hover:bg-darkGreen transition-colors"
