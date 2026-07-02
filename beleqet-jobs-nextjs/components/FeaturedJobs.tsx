@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { jobs } from "@/lib/mockData";
+import { getJobs } from "@/lib/api";
 import JobCard from "./JobCard";
 
-export default function FeaturedJobs() {
-  const featured = jobs.filter((j) => j.featured);
+export default async function FeaturedJobs() {
+  const response = await getJobs({ limit: 10 });
+  const featured = response.items.filter((job) => job.featured).slice(0, 5);
 
   return (
     <section className="bg-white border-y border-border">

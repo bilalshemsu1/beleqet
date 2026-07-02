@@ -1,17 +1,29 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Clock, Building2, ArrowLeft } from "lucide-react";
-import { jobs } from "@/lib/mockData";
+import { getJob, getJobs } from "@/lib/api";
 
-export function generateStaticParams() {
-  return jobs.map((job) => ({ id: job.id }));
+export const dynamic = "force-dynamic";
+
+export async function generateStaticParams() {
+  return [];
 }
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
-  const job = jobs.find((j) => j.id === params.id);
-  if (!job) notFound();
+export default async function JobDetailPage({ params }: { params: { id: string } }) {
+  let job;
 
-  const related = jobs.filter((j) => j.category === job.category && j.id !== job.id).slice(0, 3);
+  try {
+    job = await getJob(params.id);
+  } catch {
+    notFound();
+  }
+
+  const relatedResponse = await getJobs({ category: job.category.slug, limit: 6 });
+  const related = relatedResponse.items.filter((item) => item.id !== job.id).slice(0, 3);
+
+  const jobType = job.type.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (character) => character.toUpperCase());
+  const postedAgo = `${Math.max(1, Math.round((Date.now() - new Date(job.createdAt).getTime()) / (1000 * 60 * 60)))}h ago`;
 
   return (
     <div className="container-page py-10">
@@ -28,16 +40,16 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
               </span>
               <div>
                 <h1 className="text-xl sm:text-2xl font-extrabold text-ink leading-snug">{job.title}</h1>
-                <p className="text-muted mt-1">{job.company}</p>
+                <p className="text-muted mt-1">{job.company.name}</p>
                 <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted">
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5" /> {job.location}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" /> {job.postedAgo}
+                    <Clock className="h-3.5 w-3.5" /> {postedAgo}
                   </span>
                   <span className="rounded-full bg-brandGreen/10 text-brandGreen font-semibold px-2.5 py-1">
-                    {job.type}
+                    {jobType}
                   </span>
                 </div>
               </div>
@@ -47,6 +59,13 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
               <h2 className="text-sm font-semibold text-ink mb-3">Job Description</h2>
               <p className="text-sm text-muted leading-relaxed">{job.description}</p>
             </div>
+
+            {job.requirements && (
+              <div className="mt-6 pt-6 border-t border-border">
+                <h2 className="text-sm font-semibold text-ink mb-3">Requirements</h2>
+                <p className="text-sm text-muted leading-relaxed">{job.requirements}</p>
+              </div>
+            )}
 
             {job.tags && (
               <div className="mt-6 flex flex-wrap gap-2">
@@ -81,7 +100,7 @@ export default function JobDetailPage({ params }: { params: { id: string } }) {
                     className="block rounded-lg hover:bg-pageBg p-2 -mx-2 transition-colors"
                   >
                     <p className="text-sm font-semibold text-ink line-clamp-1">{r.title}</p>
-                    <p className="text-xs text-muted mt-0.5">{r.company} · {r.location}</p>
+                    <p className="text-xs text-muted mt-0.5">{r.company.name} · {r.location}</p>
                   </Link>
                 ))}
               </div>

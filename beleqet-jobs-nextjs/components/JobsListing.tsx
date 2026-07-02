@@ -3,12 +3,24 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, MapPin, SlidersHorizontal } from "lucide-react";
-import { jobs, categories } from "@/lib/mockData";
 import JobCard from "@/components/JobCard";
+import type { JobCategory, JobListItem } from "@/lib/api";
 
-const jobTypes = ["Full Time", "Part Time", "Remote", "Hybrid", "On-site", "Contract"];
+const jobTypes = [
+  { value: "FULL_TIME", label: "Full Time" },
+  { value: "PART_TIME", label: "Part Time" },
+  { value: "REMOTE", label: "Remote" },
+  { value: "HYBRID", label: "Hybrid" },
+  { value: "CONTRACT", label: "Contract" },
+];
 
-export default function JobsListing() {
+export default function JobsListing({
+  jobs,
+  categories,
+}: {
+  jobs: JobListItem[];
+  categories: JobCategory[];
+}) {
   const searchParams = useSearchParams();
 
   const [query, setQuery] = useState(searchParams.get("q") ?? "");
@@ -21,9 +33,9 @@ export default function JobsListing() {
       const matchesQuery =
         !query ||
         job.title.toLowerCase().includes(query.toLowerCase()) ||
-        job.company.toLowerCase().includes(query.toLowerCase());
+        job.company.name.toLowerCase().includes(query.toLowerCase());
       const matchesLocation = !location || job.location.toLowerCase().includes(location.toLowerCase());
-      const matchesCategory = !category || job.category === category;
+      const matchesCategory = !category || job.category.slug === category;
       const matchesType = !type || job.type === type;
       return matchesQuery && matchesLocation && matchesCategory && matchesType;
     });
@@ -76,13 +88,12 @@ export default function JobsListing() {
               {categories.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setCategory(cat.id)}
+                  onClick={() => setCategory(cat.slug)}
                   className={`flex w-full items-center justify-between text-left text-sm px-3 py-2 rounded-lg transition-colors ${
-                    category === cat.id ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
+                      category === cat.slug ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
                   }`}
                 >
                   <span>{cat.label}</span>
-                  <span className="text-xs">{cat.count}</span>
                 </button>
               ))}
             </div>
@@ -101,13 +112,13 @@ export default function JobsListing() {
               </button>
               {jobTypes.map((t) => (
                 <button
-                  key={t}
-                  onClick={() => setType(t)}
+                  key={t.value}
+                  onClick={() => setType(t.value)}
                   className={`block w-full text-left text-sm px-3 py-2 rounded-lg transition-colors ${
-                    type === t ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
+                    type === t.value ? "bg-brandGreen/10 text-brandGreen font-semibold" : "text-muted hover:bg-pageBg"
                   }`}
                 >
-                  {t}
+                  {t.label}
                 </button>
               ))}
             </div>
