@@ -44,7 +44,7 @@
     "express": "^5.2.1",
     "helmet": "^7.1.0",
     "ioredis": "^5.4.1",
-    "nodemailer": "^9.0.1",
+    "nodemailer": "^10.0.9",
     "openai": "^4.57.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
